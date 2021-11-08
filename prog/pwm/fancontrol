@@ -237,12 +237,15 @@ function FixupDeviceFiles
 	let fcvcount=0
 	while (( $fcvcount < ${#AFCTEMP[@]} )) # go through all temp inputs
 	do
-		tsen=${AFCTEMP[$fcvcount]}
-		AFCTEMP[$fcvcount]=${tsen//$DEVICE\/device/$DEVICE}
-		if [ "${AFCTEMP[$fcvcount]}" != "$tsen" ]
-		then
-			echo "Adjusing $tsen -> ${AFCTEMP[$fcvcount]}"
-		fi
+		for tsen in ${AFCTEMP[$fcvcount]//,/ }
+		do
+			tsen_adj=${tsen//$DEVICE\/device/$DEVICE}
+			AFCTEMP[$fcvcount]=${AFCTEMP[$fcvcount]//$tsen/$tsen_adj}
+			if [ "$tsen_adj" != "$tsen" ]
+			then
+				echo "Adjusing $tsen -> $tsen_adj"
+			fi
+		done
 		let fcvcount=$fcvcount+1
 	done
 
@@ -296,12 +299,14 @@ function CheckFiles
 	let fcvcount=0
 	while (( $fcvcount < ${#AFCTEMP[@]} )) # go through all temp inputs
 	do
-		tsen=${AFCTEMP[$fcvcount]}
-		if [ ! -r $tsen ]
-		then
-			echo "Error: file $tsen doesn't exist or isn't readable" >&2
-			outdated=1
-		fi
+		for tsen in ${AFCTEMP[$fcvcount]//,/ }
+		do
+			if [ ! -r $tsen ]
+			then
+				echo "Error: file $tsen doesn't exist or isn't readable" >&2
+				outdated=1
+			fi
+		done
 		let fcvcount=$fcvcount+1
 	done
 
@@ -541,12 +546,21 @@ function UpdateFanSpeeds
 		maxpwm=${AFCMAXPWM[$fcvcount]}
 		avg=${AFCAVERAGE[$fcvcount]}
 
-		read tlastval < ${tsens}
-		if [ $? -ne 0 ]
-		then
-			echo "Error reading temperature from $DIR/$tsens"
-			restorefans 1
-		fi
+		let tlastval=0
+		for i in ${tsens//,/ }  
+		do
+			read tval < ${i}
+			if [ $? -ne 0 ]
+			then
+				echo "Error reading temperature from $DIR/$i"
+				restorefans 1
+			fi
+
+			if (( $tval > $tlastval ))
+			then
+				tlastval=$tval
+			fi
+		done
 
 		read pwmpval < ${pwmo}
 		if [ $? -ne 0 ]
