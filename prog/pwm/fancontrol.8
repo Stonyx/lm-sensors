@@ -96,14 +96,17 @@ VARIABLE2=...
 Each variable has its own line. The variable name is followed by an equal sign
 and the device=value pairs. These consist of the path to the pwm output for
 which the value is valid, equal sign followed by the value and are separated
-by a blank. Path can be absolute or relative (from /sys/bus/i2c/devices or
-/sys/class/hwmon depending on the kernel version). Example:
+by a blank. Some variables also support a comma seperated list of values. Path
+can be absolute or relative (from /sys/bus/i2c/devices or /sys/class/hwmon
+depending on the kernel version). Example:
 .IP
 MINTEMP=hwmon0/device/pwm1=40 hwmon0/device/pwm2=54
 .PP
 You have to play with the temperature values a bit to get happy. For initial
 setup I recommend using the \fBpwmconfig\fP script. Small changes can be made by
-editing the config file directly following the rules above.
+editing the config file directly following the rules above.  Advanced features
+like using multiple temperature sensors to control a single PWM output can only
+be enabled by editing the config file directly.
 
 Upon starting, fancontrol will make sure that all referenced devices
 do exist and match what they were at configuration time, and that all
